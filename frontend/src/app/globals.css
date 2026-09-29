@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm Alabaster / Linen Sand Canvas */
+    --background: 36 33% 97%;
+    --foreground: 24 24% 15%;
+    
+    /* Frosted Warm White Cards */
+    --card: 0 0% 100%;
+    --card-foreground: 24 24% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 24% 15%;
+    
+    /* Warm Amber / Sunset Zero-G Accent */
+    --primary: 28 92% 52%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Warm Sand Muted & Secondary */
+    --secondary: 36 25% 91%;
+    --secondary-foreground: 24 20% 20%;
+    --muted: 36 20% 92%;
+    --muted-foreground: 25 10% 45%;
+    
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 36 20% 86%;
+    --input: 36 20% 86%;
+    --ring: 28 92% 52%;
+    --radius: 0.85rem;
+  }
+
+  .dark {
+    /* Rich Dark Espresso & Warm Amber for Dark Mode */
+    --background: 24 20% 8%;
+    --foreground: 36 25% 95%;
+    --card: 24 20% 11%;
+    --card-foreground: 36 25% 95%;
+    --popover: 24 20% 11%;
+    --popover-foreground: 36 25% 95%;
+    --primary: 28 92% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 24 15% 18%;
+    --secondary-foreground: 36 25% 95%;
+    --muted: 24 15% 18%;
+    --muted-foreground: 25 10% 65%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 24 15% 22%;
+    --input: 24 15% 22%;
+    --ring: 28 92% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-amber-500/20 selection:text-amber-800 dark:selection:text-amber-300;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* Warm ambient sunset glow */
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.09) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(251, 146, 60, 0.08) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(253, 230, 138, 0.15) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+/* Glassmorphism & Warm Neon Glows */
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/70 dark:bg-stone-900/60 backdrop-blur-md border border-amber-900/10 dark:border-white/10 shadow-xl;
+  }
+  .glass-card {
+    @apply bg-white/60 dark:bg-stone-900/50 backdrop-blur-md border border-amber-900/10 dark:border-white/10 hover:border-amber-500/40 transition-all duration-300 ease-out;
+  }
+  .neon-glow-amber {
+    box-shadow: 0 0 20px rgba(245, 124, 0, 0.35);
+  }
+  .neon-glow-warm {
+    box-shadow: 0 0 15px rgba(234, 88, 12, 0.3);
+  }
+}
