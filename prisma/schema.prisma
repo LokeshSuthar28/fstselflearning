@@ -1,0 +1,164 @@
+// Prisma Schema: Step High Sneakers Relational Architecture
+// Implements CO4: Normalized relational database schema with strict foreign-key integrity
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -------------------------------------------------------------
+// ENUMS
+// -------------------------------------------------------------
+
+/// Role-Based Access Control (RBAC) tiers
+enum Role {
+  ADMIN
+  MEMBER
+  GUEST
+}
+
+/// Lifecycle status for Sneaker Pre-order Transactions
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  DISPATCHED
+  CANCELLED
+}
+
+/// High-level audit event categories for compliance and observability
+enum AuditCategory {
+  TRANSACTION
+  EMAIL_NOTIFICATION
+  AUTH_GATE
+  SYSTEM
+}
+
+// -------------------------------------------------------------
+// USER & BETTER AUTH MODELS
+// -------------------------------------------------------------
+
+model User {
+  id            String        @id @default(cuid())
+  name          String
+  email         String        @unique
+  emailVerified Boolean       @default(false)
+  image         String?
+  role          Role          @default(MEMBER)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Strict Foreign-Key Relations
+  sessions      Session[]
+  accounts      Account[]
+  transactions  Transaction[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verifications")
+}
+
+// -------------------------------------------------------------
+// COMMERCE & PRE-ORDER DOMAIN (CO4)
+// -------------------------------------------------------------
+
+model Transaction {
+  id              String            @id @default(cuid())
+  orderNumber     String            @unique
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Sneaker Details
+  modelName       String
+  edition         String
+  size            Decimal           @db.Decimal(3, 1) // e.g. 10.5
+  quantity        Int               @default(1)
+  unitPrice       Decimal           @db.Decimal(10, 2)
+  totalAmount     Decimal           @db.Decimal(10, 2)
+  currency        String            @default("USD")
+  status          TransactionStatus @default(CONFIRMED)
+  
+  shippingAddress Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relational Audit Trail
+  auditLogs       AuditLog[]
+
+  @@index([userId])
+  @@index([orderNumber])
+  @@map("transactions")
+}
+
+// -------------------------------------------------------------
+// LIFECYCLE AUDITING & WEBHOOK INGESTION (CO3 & CO4)
+// -------------------------------------------------------------
+
+model AuditLog {
+  id            String        @id @default(cuid())
+  userId        String?
+  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  transactionId String?
+  transaction   Transaction?  @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  
+  action        String        // e.g. "EMAIL_DELIVERED", "EMAIL_BOUNCED", "TRANSACTION_CREATED"
+  category      AuditCategory @default(SYSTEM)
+  status        String        // e.g. "SUCCESS", "FAILED", "DELIVERED", "BOUNCED"
+  metadata      Json?         // Stores webhook payloads, Resend messageId, or error stacks
+  ipAddress     String?
+  createdAt     DateTime      @default(now())
+
+  @@index([userId])
+  @@index([transactionId])
+  @@index([action])
+  @@map("audit_logs")
+}
